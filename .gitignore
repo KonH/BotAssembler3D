@@ -1,3 +1,8 @@
 Library
 Temp
 .DS_Store
+.idea
+obj
+*.csproj
+*.sln
+*.user

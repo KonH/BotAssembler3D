@@ -8,7 +8,6 @@ using Unity.Transforms;
 using UnityEngine;
 
 namespace BotAssembler.Systems {
-	[UpdateAfter(typeof(RandomMovementTargetSystem))]
 	public class MovementSystem : JobComponentSystem {
 		[BurstCompile]
 		struct MovementJob : IJobProcessComponentData<Position, MovementSpeed, MovementTarget> {

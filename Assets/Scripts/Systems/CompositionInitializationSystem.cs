@@ -16,19 +16,28 @@ namespace BotAssembler.Systems {
 			using ( var rows = _rows.ToEntityArray(Allocator.TempJob) ) {
 				foreach ( var row in rows ) {
 					var rowData = EntityManager.GetSharedComponentData<CompositionRow>(row);
+					var positions = rowData.Positions;
+					positions.Sort(CompareByDistance);
 					var queue = new NativeQueue<float2>(Allocator.Persistent);
-					foreach ( var pos in rowData.Positions ) {
+					foreach ( var pos in positions ) {
 						queue.Enqueue(pos);
 					}
+					var maxPos = positions[positions.Count - 1];
+					var maxLength = 10 + math.max(math.abs(maxPos.x), math.abs(maxPos.y));
 					var runtimeRow = new RuntimeRow {
 						Prefab    = rowData.Prefab,
 						Interval  = 0.25f,
-						Positions = queue
+						Positions = queue,
+						Distance = maxLength
 					};
 					EntityManager.AddSharedComponentData(row, runtimeRow);
 					EntityManager.RemoveComponent<CompositionRow>(row);
 				}
 			}
+		}
+
+		int CompareByDistance(float2 x, float2 y) {
+			return math.length(x).CompareTo(math.length(y));
 		}
 	}
 }

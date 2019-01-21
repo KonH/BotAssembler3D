@@ -6,8 +6,8 @@ using UnityEngine;
 namespace BotAssembler.Components {
 	public enum SpawnDirection {
 		XPositive = 0,
-		XNegative = 1,
-		ZPositive = 2,
+		ZPositive = 1,
+		XNegative = 2,
 		ZNegative = 3
 	}
 	public struct RuntimeRow : ISharedComponentData {
@@ -16,6 +16,7 @@ namespace BotAssembler.Components {
 		public float Interval;
 		public NativeQueue<float2> Positions;
 		public SpawnDirection Direction;
+		public float Distance;
 	}
 	
 	public class RuntimeRowComponent : SharedComponentDataWrapper<RuntimeRow> {}

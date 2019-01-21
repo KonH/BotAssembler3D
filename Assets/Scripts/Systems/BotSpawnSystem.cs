@@ -32,7 +32,7 @@ namespace BotAssembler.Systems {
 						pos.z += pos2D.y;
 						var instance = EntityManager.Instantiate(rowData.Prefab);
 						EntityManager.AddComponentData(instance, new MovementTarget() { Set = true, Value = pos });
-						var startPos = GetStartPos(pos, rowData.Direction);
+						var startPos = GetStartPos(pos, rowData.Distance, rowData.Direction);
 						if ( rowData.Direction != SpawnDirection.ZNegative ) {
 							rowData.Direction++;
 						} else {
@@ -45,8 +45,7 @@ namespace BotAssembler.Systems {
 			}
 		}
 
-		float3 GetStartPos(float3 pos, SpawnDirection dir) {
-			var distance = 5.0f;
+		float3 GetStartPos(float3 pos, float distance, SpawnDirection dir) {
 			switch ( dir ) {
 				case SpawnDirection.XNegative: return pos - new float3(distance, 0, 0);
 				case SpawnDirection.XPositive: return pos + new float3(distance, 0, 0);

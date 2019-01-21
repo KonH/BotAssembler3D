@@ -10,7 +10,7 @@ namespace BotAssembler.Systems {
 		[BurstCompile]
 		struct RemoveTargetIfReachedJob : IJobProcessComponentDataWithEntity<Position, MovementTarget> {
 			public void Execute(Entity entity, int index, ref Position position, ref MovementTarget target) {
-				if ( target.Set && (math.distance(position.Value, target.Value) < 0.01f) ) {
+				if ( target.Set && (math.distance(position.Value, target.Value) < 0.05f) ) {
 					position.Value = target.Value;
 					target.Set = false;
 				}

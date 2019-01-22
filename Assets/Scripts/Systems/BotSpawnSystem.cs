@@ -32,12 +32,7 @@ namespace BotAssembler.Systems {
 						pos.z += pos2D.y;
 						var instance = EntityManager.Instantiate(rowData.Prefab);
 						EntityManager.AddComponentData(instance, new MovementTarget() { Set = true, Value = pos });
-						var startPos = GetStartPos(pos, rowData.Distance, rowData.Direction);
-						if ( rowData.Direction != SpawnDirection.ZNegative ) {
-							rowData.Direction++;
-						} else {
-							rowData.Direction = SpawnDirection.XPositive;
-						}
+						var startPos = GetStartPos(pos, rowData.Distance);
 						EntityManager.SetComponentData(instance, new Position() { Value = startPos });
 					}
 					EntityManager.SetSharedComponentData(row, rowData);
@@ -45,14 +40,11 @@ namespace BotAssembler.Systems {
 			}
 		}
 
-		float3 GetStartPos(float3 pos, float distance, SpawnDirection dir) {
-			switch ( dir ) {
-				case SpawnDirection.XNegative: return pos - new float3(distance, 0, 0);
-				case SpawnDirection.XPositive: return pos + new float3(distance, 0, 0);
-				case SpawnDirection.ZNegative: return pos - new float3(0, 0, distance);
-				case SpawnDirection.ZPositive: return pos + new float3(0, 0, distance);
-				default: return pos;
+		float3 GetStartPos(float3 pos, float distance) {
+			if ( math.abs(pos.x) > math.abs(pos.z) ) {
+				return (pos.x >= 0) ? pos + new float3(distance, 0, 0) : pos - new float3(distance, 0, 0);
 			}
+			return (pos.z >= 0) ? pos + new float3(0, 0, distance) : pos - new float3(0, 0, distance);
 		}
 	}
 }

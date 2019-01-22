@@ -325,6 +325,10 @@ MonoBehaviour:
       y: -2
     - x: 0
       y: 2
+    - x: 1
+      y: 2
+    - x: -1
+      y: 2
 --- !u!114 &1152887295
 MonoBehaviour:
   m_ObjectHideFlags: 0

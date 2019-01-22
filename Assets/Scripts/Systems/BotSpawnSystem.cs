@@ -31,9 +31,12 @@ namespace BotAssembler.Systems {
 						pos.x += pos2D.x;
 						pos.z += pos2D.y;
 						var instance = EntityManager.Instantiate(rowData.Prefab);
-						EntityManager.AddComponentData(instance, new MovementTarget() { Set = true, Value = pos });
 						var startPos = GetStartPos(pos, rowData.Distance);
+						var speedPerUnit = EntityManager.GetComponentData<MovementSpeed>(instance).Value;
+						var actualSpeed = speedPerUnit / math.distance(startPos, pos);
 						EntityManager.SetComponentData(instance, new Position() { Value = startPos });
+						EntityManager.SetComponentData(instance, new MovementSpeed { Value = actualSpeed });
+						EntityManager.AddComponentData(instance, new MovementTarget() { Start = startPos, End = pos });
 					}
 					EntityManager.SetSharedComponentData(row, rowData);
 				}

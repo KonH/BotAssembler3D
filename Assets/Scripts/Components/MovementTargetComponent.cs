@@ -7,8 +7,9 @@ using UnityEngine;
 namespace BotAssembler.Components {
 	[Serializable]
 	public struct MovementTarget : IComponentData {
-		public float3 Value;
-		public TBool Set;
+		public float3 Start;
+		public float3 End;
+		public float Position;
 	}
 	
 	[DisallowMultipleComponent]

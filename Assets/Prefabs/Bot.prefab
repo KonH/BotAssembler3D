@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 2443831469870386700}
   - component: {fileID: 2443831469870386701}
   - component: {fileID: 2443831469870386698}
+  - component: {fileID: 8298387823735617930}
   - component: {fileID: 2443831469870386699}
   - component: {fileID: 2443831469870386695}
   m_Layer: 0
@@ -63,6 +64,23 @@ MonoBehaviour:
       x: 0
       y: 0
       z: 0
+--- !u!114 &8298387823735617930
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2443831469870386702}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1060dcfa4c8484da9a56580361de6f9f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_SerializedData:
+    Value:
+      x: 1
+      y: 1
+      z: 1
 --- !u!114 &2443831469870386699
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -80,8 +98,8 @@ MonoBehaviour:
     material: {fileID: 10302, guid: 0000000000000000f000000000000000, type: 0}
     subMesh: 0
     layer: 0
-    castShadows: 1
-    receiveShadows: 1
+    castShadows: 0
+    receiveShadows: 0
 --- !u!114 &2443831469870386695
 MonoBehaviour:
   m_ObjectHideFlags: 0

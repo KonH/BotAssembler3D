@@ -10,19 +10,17 @@ using UnityEngine;
 namespace BotAssembler.Systems {
 	public class MovementSystem : JobComponentSystem {
 		[BurstCompile]
-		struct MovementJob : IJobProcessComponentData<Position, MovementSpeed, MovementTarget> {
+		struct MovementJob : IJobProcessComponentData<Position, Scale, MovementSpeed, MovementTarget> {
 			[ReadOnly] float _dt;
 
 			public MovementJob(float dt) {
 				_dt = dt;
 			}
 			
-			public void Execute(ref Position position, [ReadOnly] ref MovementSpeed speed, [ReadOnly] ref MovementTarget target) {
-				if ( !target.Set ) {
-					return;
-				}
-				var direction = math.normalize(target.Value - position.Value);
-				position.Value += direction * speed.Value * _dt;
+			public void Execute(ref Position position, ref Scale scale, [ReadOnly] ref MovementSpeed speed, ref MovementTarget target) {
+				position.Value = math.lerp(target.Start, target.End, target.Position);
+				scale.Value = math.lerp(float3.zero, new float3(1, 1, 1), target.Position);
+				target.Position += speed.Value * _dt;
 			}
 		}
 

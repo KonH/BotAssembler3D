@@ -22,8 +22,9 @@ public static class BakeWrapper {
 			return;
 		}
 		var trans = go.transform;
-		var origin = trans.position;
+		var origin = go.GetComponent<Collider>().bounds.center;
 		var instances = new List<CompositionRowComponent>();
+		IsPositionOccupiedBy(origin, trans);
 		var filledCells = FillRow(origin, new HashSet<Vector2> { Vector2.zero }, trans, instances);
 		FillRows(origin, Vector3.up, filledCells, trans, instances);
 		FillRows(origin, Vector3.down, filledCells, trans, instances);

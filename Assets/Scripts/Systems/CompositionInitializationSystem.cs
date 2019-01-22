@@ -26,9 +26,10 @@ namespace BotAssembler.Systems {
 					var maxLength = 10 + math.max(math.abs(maxPos.x), math.abs(maxPos.y));
 					var runtimeRow = new RuntimeRow {
 						Prefab    = rowData.Prefab,
+						Delay     = rowData.Delay,
 						Interval  = 0.25f,
 						Positions = queue,
-						Distance = maxLength
+						Distance  = maxLength
 					};
 					EntityManager.AddSharedComponentData(row, runtimeRow);
 					EntityManager.RemoveComponent<CompositionRow>(row);

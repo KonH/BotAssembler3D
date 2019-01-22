@@ -6,6 +6,7 @@ using UnityEngine;
 namespace BotAssembler.Components {
 	public struct RuntimeRow : ISharedComponentData {
 		public GameObject Prefab;
+		public float Delay;
 		public float Timer;
 		public float Interval;
 		public NativeQueue<float2> Positions;

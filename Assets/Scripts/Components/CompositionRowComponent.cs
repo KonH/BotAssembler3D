@@ -8,6 +8,7 @@ namespace BotAssembler.Components {
 	[Serializable]
 	public struct CompositionRow : ISharedComponentData {
 		public GameObject Prefab;
+		public float Delay;
 		public List<float2> Positions;
 	}
 

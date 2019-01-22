@@ -17,10 +17,15 @@ namespace BotAssembler.Systems {
 			using ( var rows = _rows.ToEntityArray(Allocator.TempJob) ) {
 				foreach ( var row in rows ) {
 					var rowData = EntityManager.GetSharedComponentData<RuntimeRow>(row);
+					if ( rowData.Delay > 0 ) {
+						rowData.Delay -= Time.deltaTime;
+						EntityManager.SetSharedComponentData(row, rowData);
+						continue;
+					}
 					if ( rowData.Positions.Count == 0 ) {
 						rowData.Positions.Dispose();
 						EntityManager.DestroyEntity(row);
-						return;
+						continue;
 					}
 					if ( rowData.Timer < rowData.Interval ) {
 						rowData.Timer += Time.deltaTime;

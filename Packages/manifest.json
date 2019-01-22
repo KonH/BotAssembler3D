@@ -1,6 +1,9 @@
 {
   "dependencies": {
+    "com.unity.burst": "0.2.4-preview.41",
+    "com.unity.collections": "0.0.9-preview.11",
     "com.unity.entities": "0.0.12-preview.23",
+    "com.unity.mathematics": "0.0.12-preview.19",
     "com.unity.package-manager-ui": "2.0.3",
     "com.unity.rendering.hybrid": "0.0.1-preview.3",
     "com.unity.test-framework.performance": "0.1.49-preview",

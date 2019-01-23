@@ -3,7 +3,8 @@
     "references": [
         "Scripts",
         "Unity.Entities.Hybrid",
-        "Unity.Mathematics"
+        "Unity.Mathematics",
+        "Unity.EditorCoroutines.Editor"
     ],
     "optionalUnityReferences": [],
     "includePlatforms": [

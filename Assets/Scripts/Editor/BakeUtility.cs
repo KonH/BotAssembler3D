@@ -1,6 +1,8 @@
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using BotAssembler.Components;
+using BotAssembler.Utils;
 using Unity.Mathematics;
 using UnityEditor;
 using UnityEngine;
@@ -27,21 +29,26 @@ namespace BotAssembler.Editor {
 			_origin    = _root.GetComponent<Collider>().bounds.center;
 		}
 
-		public void Bake() {
-			var filledCells = FillRow(_origin, new HashSet<Vector2> {Vector2.zero});
-			FillRows(_origin, Vector3.up,   filledCells);
-			FillRows(_origin, Vector3.down, filledCells);
+		public IEnumerator Bake() {
+			var filledCellsResult = new ResultHolder<HashSet<Vector2>>();
+			yield return FillRow(_origin, new HashSet<Vector2> {Vector2.zero}, filledCellsResult);
+			var filledCells = filledCellsResult.Get();
+			yield return FillRows(_origin, Vector3.up,   filledCells);
+			yield return FillRows(_origin, Vector3.down, filledCells);
 			SetupDelay();
+			Undo.RecordObject(_root, "Disable original object");
 			_root.SetActive(false);
 		}
-		
-		HashSet<Vector2> FillRow(Vector3 origin, HashSet<Vector2> startQueue) {
+
+		IEnumerator FillRow(Vector3 origin, HashSet<Vector2> startQueue, ResultHolder<HashSet<Vector2>> result) {
 			var queuedCells = new Queue<Vector2>(startQueue);
 			var filledCells = new HashSet<Vector2>();
 			var emptyCells  = new HashSet<Vector2>();
 			while ( queuedCells.Count > 0 ) {
 				var cell = queuedCells.Dequeue();
-				if ( IsPositionOccupiedBy(origin + new Vector3(cell.x, 0, cell.y)) ) {
+				var isOccupied = new ResultHolder<bool>();
+				yield return IsPositionOccupiedBy(origin + new Vector3(cell.x, 0, cell.y), isOccupied);
+				if ( isOccupied.Get() ) {
 					filledCells.Add(cell);
 					AddNearestCellsToQueue(cell, queuedCells, filledCells, emptyCells);
 				} else {
@@ -49,7 +56,7 @@ namespace BotAssembler.Editor {
 				}
 			}
 			TryCreateRow(filledCells, origin);
-			return filledCells;
+			result.Set(filledCells);
 		}
 
 		void AddNearestCellsToQueue(Vector2 cell, Queue<Vector2> queue, HashSet<Vector2> filled, HashSet<Vector2> empty) {
@@ -81,24 +88,29 @@ namespace BotAssembler.Editor {
 			_instances.Add(compositionRow);
 		}
 
-		void FillRows(Vector3 origin, Vector3 offset, HashSet<Vector2> startQueue) {
+		IEnumerator FillRows(Vector3 origin, Vector3 offset, HashSet<Vector2> startQueue) {
 			var acc    = origin + offset;
 			var filled = startQueue;
 			while ( filled.Count > 0 ) {
-				filled =  FillRow(acc, filled);
+				var filledResult = new ResultHolder<HashSet<Vector2>>();
+				yield return FillRow(acc, filled, filledResult);
+				filled = filledResult.Get();
 				acc    += offset;
 			}
 		}
-
-		bool IsPositionOccupiedBy(Vector3 pos) {
+		
+		IEnumerator IsPositionOccupiedBy(Vector3 pos, ResultHolder<bool> result) {
+			// Will be re-written
+			result.Set(false);
 			var count = Physics.OverlapBoxNonAlloc(pos, Vector3.one, _temp);
 			for ( var i = 0; i < count; i++ ) {
-				var result = _temp[i];
-				if ( result.transform == _trans ) {
-					return true;
+				var collider = _temp[i];
+				if ( collider.transform == _trans ) {
+					result.Set(true);
+					break;
 				}
 			}
-			return false;
+			yield return null;
 		}
 
 		void SetupDelay() {

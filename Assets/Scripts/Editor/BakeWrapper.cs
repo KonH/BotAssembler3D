@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using BotAssembler.Components;
+using Unity.EditorCoroutines.Editor;
 using Unity.Mathematics;
 using UnityEditor;
 using UnityEngine;
@@ -17,7 +18,7 @@ namespace BotAssembler.Editor {
 				return;
 			}
 			_utility = new BakeUtility(go);
-			_utility.Bake();
+			EditorCoroutineUtility.StartCoroutineOwnerless(_utility.Bake());
 		}
 	}
 }

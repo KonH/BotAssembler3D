@@ -119,7 +119,7 @@ namespace BotAssembler.Editor {
 				var instance = _instances[i];
 				Undo.RecordObject(instance, "Setup delay for " + instance.gameObject.name);
 				var compositionRow = instance.Value;
-				compositionRow.Delay = i * 1.5f;
+				compositionRow.Delay = i * 0.5f;
 				instance.Value = compositionRow;
 			}
 		}

@@ -27,7 +27,7 @@ namespace BotAssembler.Systems {
 					var runtimeRow = new RuntimeRow {
 						Prefab    = rowData.Prefab,
 						Delay     = rowData.Delay,
-						Interval  = 0.25f,
+						Interval  = rowData.Interval,
 						Positions = queue,
 						Distance  = maxLength
 					};

@@ -90,4 +90,6 @@ MonoBehaviour:
   m_SerializedData:
     Prefab: {fileID: 2443831469870386702, guid: c3cc1e31b28e441a5b2032679245a0b4,
       type: 3}
+    Delay: 0
+    Interval: 0.005
     Positions: []

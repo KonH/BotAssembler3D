@@ -12,5 +12,12 @@ namespace BotAssembler.Components {
 		public List<float2> Positions;
 	}
 
-	public class CompositionRowComponent : SharedComponentDataWrapper<CompositionRow> {}
+	public class CompositionRowComponent : SharedComponentDataWrapper<CompositionRow> {
+		void OnDrawGizmosSelected() {
+			var points = Value.Positions;
+			foreach ( var point in points ) {
+				Gizmos.DrawWireCube(transform.position + new Vector3(point.x, 0.0f, point.y), Vector3.one);
+			}
+		}
+	}
 }

@@ -9,24 +9,32 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 
 namespace BotAssembler.Editor {
+	// It will be better to find only corner points
+	// Also, it interesting to move this logic to job systems
 	public class BakeUtility {
 		static Vector2[] _lookupDirs = {
 			Vector2.up, Vector2.down, Vector2.left, Vector2.right,
 			Vector2.up   + Vector2.left, Vector2.up   + Vector2.right,
 			Vector2.down + Vector2.left, Vector2.down + Vector2.right
 		};
+		
+		static Vector3[] _raycastDirs = {
+			Vector3.up, Vector3.down, Vector3.left, Vector3.right
+		};
 
-		Collider[]                    _temp      = new Collider[16];
+		const float _raycastDistance = 10000;
+
+		RaycastHit[]                  _temp      = new RaycastHit[16];
 		List<CompositionRowComponent> _instances = new List<CompositionRowComponent>();
 
 		GameObject _root;
-		Transform  _trans;
+		Collider   _collider;
 		Vector3    _origin;
 
 		public BakeUtility(GameObject root) {
-			_root      = root;
-			_trans     = _root.transform;
-			_origin    = _root.GetComponent<Collider>().bounds.center;
+			_root     = root;
+			_collider = _root.GetComponent<Collider>();
+			_origin   = _collider.bounds.center;
 		}
 
 		public IEnumerator Bake() {
@@ -100,17 +108,27 @@ namespace BotAssembler.Editor {
 		}
 		
 		IEnumerator IsPositionOccupiedBy(Vector3 pos, ResultHolder<bool> result) {
-			// Will be re-written
-			result.Set(false);
-			var count = Physics.OverlapBoxNonAlloc(pos, Vector3.one, _temp);
-			for ( var i = 0; i < count; i++ ) {
-				var collider = _temp[i];
-				if ( collider.transform == _trans ) {
-					result.Set(true);
+			var isFailed = false;
+			var distanceLimit = _raycastDistance;
+			foreach ( var dir in _raycastDirs ) {
+				var count = Physics.RaycastNonAlloc(pos + dir * _raycastDistance, -dir, _temp, _raycastDistance);
+				if ( !IsWantedCollision(count, distanceLimit) ) {
+					isFailed = true;
 					break;
 				}
+				yield return null;
 			}
-			yield return null;
+			result.Set(!isFailed);
+		}
+
+		bool IsWantedCollision(int count, float distanceLimit) {
+			for ( var i = 0; i < count; i++ ) {
+				var hit = _temp[i];
+				if ( hit.collider == _collider ) {
+					return hit.distance < distanceLimit;
+				}
+			}
+			return false;
 		}
 
 		void SetupDelay() {

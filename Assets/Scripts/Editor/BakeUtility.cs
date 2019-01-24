@@ -9,19 +9,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 
 namespace BotAssembler.Editor {
-	// It will be better to find only corner points
-	// Also, it interesting to move this logic to job systems
 	public class BakeUtility {
-		static Vector2[] _lookupDirs = {
-			Vector2.up, Vector2.down, Vector2.left, Vector2.right,
-			Vector2.up   + Vector2.left, Vector2.up   + Vector2.right,
-			Vector2.down + Vector2.left, Vector2.down + Vector2.right
-		};
-		
-		static Vector3[] _raycastDirs = {
-			Vector3.up, Vector3.down, Vector3.left, Vector3.right
-		};
-
 		const float _raycastDistance = 10000;
 
 		RaycastHit[]                  _temp      = new RaycastHit[16];
@@ -38,51 +26,70 @@ namespace BotAssembler.Editor {
 		}
 
 		public IEnumerator Bake() {
-			var filledCellsResult = new ResultHolder<HashSet<Vector2>>();
-			yield return FillRow(_origin, new HashSet<Vector2> {Vector2.zero}, filledCellsResult);
-			var filledCells = filledCellsResult.Get();
-			yield return FillRows(_origin, Vector3.up,   filledCells);
-			yield return FillRows(_origin, Vector3.down, filledCells);
+			yield return FillRow(_origin);
+			yield return FillRows(_origin, Vector3.up);
+			yield return FillRows(_origin, Vector3.down);
 			SetupDelay();
 			Undo.RecordObject(_root, "Disable original object");
 			_root.SetActive(false);
 		}
 
-		IEnumerator FillRow(Vector3 origin, HashSet<Vector2> startQueue, ResultHolder<HashSet<Vector2>> result) {
-			var queuedCells = new Queue<Vector2>(startQueue);
-			var filledCells = new HashSet<Vector2>();
-			var emptyCells  = new HashSet<Vector2>();
-			while ( queuedCells.Count > 0 ) {
-				var cell = queuedCells.Dequeue();
-				var isOccupied = new ResultHolder<bool>();
-				yield return IsPositionOccupiedBy(origin + new Vector3(cell.x, 0, cell.y), isOccupied);
-				if ( isOccupied.Get() ) {
-					filledCells.Add(cell);
-					AddNearestCellsToQueue(cell, queuedCells, filledCells, emptyCells);
-				} else {
-					emptyCells.Add(cell);
+		IEnumerator FillRow(Vector3 origin, ResultHolder<bool> result = null) {
+			var points = new HashSet<Vector2>();
+			yield return FillContactsPointsAtSide(origin, Vector3.forward, points);
+			yield return FillContactsPointsAtSide(origin, Vector3.back, points);
+			yield return FillContactsPointsAtSide(origin, Vector3.left, points);
+			yield return FillContactsPointsAtSide(origin, Vector3.right, points);
+			var createResult = TryCreateRow(points, origin);
+			if ( result != null ) {
+				result.Value = createResult;
+			}
+		}
+
+		bool TryAddContactPoints(Vector3 origin, Vector3 direction, HashSet<Vector2> points) {
+			var count = Physics.RaycastNonAlloc(origin - direction * _raycastDistance, direction, _temp, _raycastDistance * 2);
+			var result = false;
+			for ( var i = 0; i < count; i++ ) {
+				var hit = _temp[i];
+				if ( hit.collider == _collider ) {
+					var point = hit.point;
+					points.Add(new Vector2(point.x, point.z));
+					result = true;
 				}
 			}
-			TryCreateRow(filledCells, origin);
-			result.Set(filledCells);
+			
+			return result;
 		}
 
-		void AddNearestCellsToQueue(Vector2 cell, Queue<Vector2> queue, HashSet<Vector2> filled, HashSet<Vector2> empty) {
-			foreach ( var dir in _lookupDirs ) {
-				AddCellToQueue(cell + dir, queue, filled, empty);
+		IEnumerator FillContactsPointsAtSide(Vector3 origin, Vector3 direction, HashSet<Vector2> points) {
+			if ( TryAddContactPoints(origin, Vector3.forward, points) ) {
+				yield return null;
+				var leftShift = new Vector3(-direction.z, 0, direction.x);
+				yield return FillContactsPointsBeside(origin, direction, leftShift, points);
+				var rightShift = new Vector3(direction.z, 0, direction.x);
+				yield return FillContactsPointsBeside(origin, direction, rightShift, points);
 			}
 		}
-
-		void AddCellToQueue(Vector2 cell, Queue<Vector2> queue, HashSet<Vector2> filled, HashSet<Vector2> empty) {
-			if ( filled.Contains(cell) || empty.Contains(cell) || queue.Contains(cell) ) {
-				return;
-			}
-			queue.Enqueue(cell);
+		
+		IEnumerator FillContactsPointsBeside(Vector3 origin, Vector3 direction, Vector3 offset, HashSet<Vector2> points) {
+			var acc = origin;
+			var maxFails = 10;
+			var fails = 0;
+			bool found;
+			do {
+				acc += offset;
+				found = TryAddContactPoints(acc, direction, points);
+				if ( !found && (fails < maxFails) ) {
+					fails++;
+					found = true;
+				}
+				yield return null;
+			} while ( found );
 		}
 
-		void TryCreateRow(HashSet<Vector2> cells, Vector3 origin) {
+		bool TryCreateRow(HashSet<Vector2> cells, Vector3 origin) {
 			if ( cells.Count == 0 ) {
-				return;
+				return false;
 			}
 			var rowPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Row.prefab");
 			var instance  = (GameObject)PrefabUtility.InstantiatePrefab(rowPrefab, SceneManager.GetActiveScene());
@@ -94,41 +101,18 @@ namespace BotAssembler.Editor {
 			var compositionRow = instance.GetComponent<CompositionRowComponent>();
 			compositionRow.Value.Positions.AddRange(cells.Select(vector => new float2(vector.x, vector.y)));
 			_instances.Add(compositionRow);
+			return true;
 		}
 
-		IEnumerator FillRows(Vector3 origin, Vector3 offset, HashSet<Vector2> startQueue) {
-			var acc    = origin + offset;
-			var filled = startQueue;
-			while ( filled.Count > 0 ) {
-				var filledResult = new ResultHolder<HashSet<Vector2>>();
-				yield return FillRow(acc, filled, filledResult);
-				filled = filledResult.Get();
-				acc    += offset;
-			}
-		}
-		
-		IEnumerator IsPositionOccupiedBy(Vector3 pos, ResultHolder<bool> result) {
-			var isFailed = false;
-			var distanceLimit = _raycastDistance;
-			foreach ( var dir in _raycastDirs ) {
-				var count = Physics.RaycastNonAlloc(pos + dir * _raycastDistance, -dir, _temp, _raycastDistance);
-				if ( !IsWantedCollision(count, distanceLimit) ) {
-					isFailed = true;
-					break;
-				}
-				yield return null;
-			}
-			result.Set(!isFailed);
-		}
-
-		bool IsWantedCollision(int count, float distanceLimit) {
-			for ( var i = 0; i < count; i++ ) {
-				var hit = _temp[i];
-				if ( hit.collider == _collider ) {
-					return hit.distance < distanceLimit;
-				}
-			}
-			return false;
+		IEnumerator FillRows(Vector3 origin, Vector3 offset) {
+			var acc = origin;
+			bool filled;
+			do {
+				acc += offset;
+				var filledResult = new ResultHolder<bool>();
+				yield return FillRow(acc, filledResult);
+				filled = filledResult.Value;
+			} while ( filled );
 		}
 
 		void SetupDelay() {
